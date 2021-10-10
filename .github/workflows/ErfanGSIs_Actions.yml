@@ -1,0 +1,89 @@
+name: ErfanGSIs_Actions.yml
+
+on:
+#  release:
+#    types: [published]
+#  push:
+#    branches:
+#      - 
+#    paths:
+#      - '.config'
+#  schedule:
+#    - cron: 0 8 * * 5
+  watch:
+    types: [started]
+    
+env:
+  ROM_URL: http://download.h2os.com/OnePlus6/MP/OnePlus6Hydrogen_22.K.51_OTA_051_all_2105262251_6fed6a93c6c54103.zip
+  OS_TYPE: OxygenOS  #  Flyme  GenericI   MIUI   OxygenOS  Pixel  ColorOS
+  REPACK_NAME: GSI_by-jczhl
+  make_type: ab     #aonly    ab
+  TZ: Asia/Shanghai
+  wetransfer: true
+  release: false
+  pack7z: false
+  zip: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+       - name: 获取本仓库源码
+         uses: actions/checkout@master
+         
+       - name: 清理环境
+         run: |
+           docker rmi `docker images -q`
+           
+       - name: 下载 ErfanGSIs 工具
+         run: |
+            git clone --recurse-submodules https://github.com/jczhl/ErfanGSIs.git $GITHUB_WORKSPACE/ErfanGSIs
+            sudo chmod -R 777 ErfanGSIs
+            curl -sL https://git.io/file-transfer | sh
+             
+       - name: 配置环境
+         run: |
+           mkdir zhlhlf
+           cd ErfanGSIs
+           sudo apt update
+           sudo bash setup.sh
+       
+       - name: 下载ROM & 生成GSI
+         run: |
+           sudo ./ErfanGSIs/url2GSI.sh $ROM_URL $OS_TYPE --$make_type
+           ls /home/runner/work/actions_build_ErfanGSIs/actions_build_ErfanGSIs/ErfanGSIs/output/
+
+       - name: 7z打包GSI镜像
+         if: env.pack7z == 'true'    
+         run: |
+            7z a -r $OS_TYPE-$REPACK_NAME-$make_type.7z /home/runner/work/actions_build_ErfanGSIs/actions_build_ErfanGSIs/ErfanGSIs/output/*
+            
+       - name: zip 打包
+         if: env.zip == 'true'
+         run: |
+           zip -r $OS_TYPE-$REPACK_NAME-$make_type.zip /home/runner/work/actions_build_ErfanGSIs/actions_build_ErfanGSIs/ErfanGSIs/output/*
+           if [[ $(du -sb $OS_TYPE-$REPACK_NAME-$make_type.zip | awk '{print $1}') -gt 2097152000 ]];then
+                 echo -e "split packaging..."
+                 tar -cpzf - $OS_TYPE-$REPACK_NAME-$make_type.zip | split -d -b 1024m - $OS_TYPE-$REPACK_NAME-$make_type.zip
+             fi
+
+       - name: 移动生成包至zhlhlf目录
+         run: |
+          mv $OS_TYPE-$REPACK_NAME-$make_type.* zhlhlf
+                              
+       - name: 上传zhlhlf目录所有文件至WeTransfer
+         if: env.wetransfer == 'true'      
+         run: |
+            sudo ./transfer wet zhlhlf/*
+
+       - name: 上传zhlhlf目录所有文件至 release
+         if: env.release == 'true'      
+         uses: ncipollo/release-action@v1.8.6
+         with:
+           artifacts: zhlhlf/*
+           name: GSI--Android
+           tag: GSI--Android-${{ github.run_number }}
+           token: ${{ secrets.GITHUB_TOKEN }}
+
