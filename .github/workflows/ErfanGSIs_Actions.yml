@@ -39,7 +39,7 @@ jobs:
            
        - name: 下载 ErfanGSIs 工具
          run: |
-            git clone --recurse-submodules https://github.com/jczhl/ErfanGSIs.git $GITHUB_WORKSPACE/ErfanGSIs
+            git clone --recurse-submodules https://github.com/erfanoabdi/ErfanGSIs $GITHUB_WORKSPACE/ErfanGSIs
             sudo chmod -R 777 ErfanGSIs
             curl -sL https://git.io/file-transfer | sh
              
