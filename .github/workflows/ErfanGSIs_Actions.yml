@@ -14,8 +14,8 @@ on:
     types: [started]
     
 env:
-  ROM_URL: http://download.h2os.com/OnePlus6/MP/OnePlus6Hydrogen_22.K.51_OTA_051_all_2105262251_6fed6a93c6c54103.zip
-  OS_TYPE: OxygenOS  #  Flyme  GenericI   MIUI   OxygenOS  Pixel  ColorOS
+  ROM_URL: https://firmware.meizu.com/Firmware/Flyme/m2381/10.0.1.0/cn/20230404083810/d880d50d/update.zip
+  OS_TYPE: Flyme  #  Flyme  GenericI   MIUI   OxygenOS  Pixel  ColorOS
   REPACK_NAME: GSI_by-jczhl
   make_type: ab     #aonly    ab
   TZ: Asia/Shanghai
